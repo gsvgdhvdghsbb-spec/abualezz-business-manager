@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:qr_flutter/qr_flutter.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 void main() {
   runApp(const AbuAlEzzApp());
@@ -47,22 +51,19 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         appBar: AppBar(
           backgroundColor: const Color(0xFF0D1B2A),
           elevation: 0,
-          title: Row(
+          title: const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.account_balance_wallet, color: Color(0xFF3A86FF)),
-              const Column(
+              Icon(Icons.account_balance_wallet, color: Color(0xFF3A86FF)),
+              Column(
                 children: [
                   Text('محاسبة أبو العز', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                   Text('Abu Al-Ezz Accounting', style: TextStyle(fontSize: 10, color: Colors.grey)),
                 ],
               ),
               CircleAvatar(
-                backgroundColor: const Color(0xFF1B263B),
-                child: IconButton(
-                  icon: const Icon(Icons.person, color: Colors.white, size: 20),
-                  onPressed: () {},
-                ),
+                backgroundColor: Color(0xFF1B263B),
+                child: Icon(Icons.person, color: Colors.white, size: 20),
               ),
             ],
           ),
@@ -70,9 +71,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         body: _screens[_selectedIndex],
         floatingActionButton: FloatingActionButton(
           backgroundColor: const Color(0xFF3A86FF),
-          onPressed: () {
-            _showAddInvoiceDialog(context);
-          },
+          onPressed: () => _showAddInvoiceDialog(context),
           child: const Icon(Icons.add, size: 30, color: Colors.white),
         ),
         floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -116,9 +115,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1B263B),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => Directionality(
         textDirection: TextDirection.rtl,
         child: Padding(
@@ -126,23 +123,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('إضافة فاتورة جديدة', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+              const Text('إجراء جديد', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
               const SizedBox(height: 15),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2EC4B6),
-                  minimumSize: const Size(double.infinity, 45),
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2EC4B6), minimumSize: const Size(double.infinity, 45)),
                 icon: const Icon(Icons.arrow_upward, color: Colors.white),
                 label: const Text('فاتورة بيع جديدة', style: TextStyle(color: Colors.white)),
                 onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(height: 10),
               ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD90429),
-                  minimumSize: const Size(double.infinity, 45),
-                ),
+                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFD90429), minimumSize: const Size(double.infinity, 45)),
                 icon: const Icon(Icons.arrow_downward, color: Colors.white),
                 label: const Text('فاتورة شراء جديدة', style: TextStyle(color: Colors.white)),
                 onPressed: () => Navigator.pop(context),
@@ -155,7 +146,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   }
 }
 
-// 1. شاشة لوحة التحكم
+// 1. لوحة التحكم
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
@@ -166,9 +157,7 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Center(
-            child: Text('لوحة التحكم', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
-          ),
+          const Center(child: Text('لوحة التحكم', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white))),
           const SizedBox(height: 15),
           Row(
             children: [
@@ -237,7 +226,7 @@ class DashboardScreen extends StatelessWidget {
   }
 }
 
-// 2. شاشة العملاء والديون
+// 2. العملاء والديون
 class CustomersScreen extends StatelessWidget {
   const CustomersScreen({super.key});
 
@@ -269,9 +258,31 @@ class CustomersScreen extends StatelessWidget {
   }
 }
 
-// 3. شاشة الفواتير
+// 3. شاشة الفواتير وإمكانيات الطباعة والـ QR
 class InvoicesScreen extends StatelessWidget {
   const InvoicesScreen({super.key});
+
+  void _printInvoice(String invoiceId, String amount) async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        build: (pw.Context context) {
+          return pw.Center(
+            child: pw.Column(
+              mainAxisAlignment: pw.MainAxisAlignment.center,
+              children: [
+                pw.Text('Abu Al-Ezz Accounting', style: const pw.TextStyle(fontSize: 24)),
+                pw.SizedBox(height: 10),
+                pw.Text('Invoice ID: $invoiceId', style: const pw.TextStyle(fontSize: 18)),
+                pw.Text('Total Amount: $amount', style: const pw.TextStyle(fontSize: 18)),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    await Printing.layoutPdf(onLayout: (PdfPageFormat format) async => pdf.save());
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -290,13 +301,17 @@ class InvoicesScreen extends StatelessWidget {
           color: const Color(0xFF1B263B),
           margin: const EdgeInsets.only(bottom: 10),
           child: ListTile(
-            leading: const Icon(Icons.description, color: Color(0xFF3A86FF)),
+            leading: QrImageView(
+              data: "${inv['id']} - ${inv['amount']}",
+              version: QrVersions.auto,
+              size: 40.0,
+              backgroundColor: Colors.white,
+            ),
             title: Text('${inv['id']} - ${inv['name']}', style: const TextStyle(color: Colors.white, fontSize: 14)),
             subtitle: Text(inv['amount'] as String, style: const TextStyle(color: Colors.white70)),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(color: (inv['color'] as Color).withOpacity(0.2), borderRadius: BorderRadius.circular(5)),
-              child: Text(inv['status'] as String, style: TextStyle(color: inv['color'] as Color, fontSize: 12)),
+            trailing: IconButton(
+              icon: const Icon(Icons.print, color: Color(0xFF3A86FF)),
+              onPressed: () => _printInvoice(inv['id'] as String, inv['amount'] as String),
             ),
           ),
         );
@@ -305,7 +320,7 @@ class InvoicesScreen extends StatelessWidget {
   }
 }
 
-// 4. شاشة "المزيد" (شبكة الموديولات)
+// 4. الموديولات والإعدادات
 class MoreMenuScreen extends StatelessWidget {
   const MoreMenuScreen({super.key});
 
@@ -343,11 +358,7 @@ class MoreMenuScreen extends StatelessWidget {
             children: [
               Icon(item['icon'] as IconData, color: const Color(0xFF3A86FF), size: 30),
               const SizedBox(height: 8),
-              Text(
-                item['title'] as String,
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white, fontSize: 11),
-              ),
+              Text(item['title'] as String, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
             ],
           ),
         );
