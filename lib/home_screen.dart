@@ -1,4 +1,6 @@
-import 'package:flutter/material';
+import 'package:flutter/material.dart';
+import 'add_product_screen.dart';
+import 'pos_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -8,17 +10,23 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedIndex = 0;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('نظام إدارة أبو العز'),
+        backgroundColor: Colors.deepOrange,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.notifications_none),
-            onPressed: () {},
+            icon: const Icon(Icons.point_of_sale),
+            tooltip: 'نقطة البيع',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const PosScreen()),
+              );
+            },
           ),
         ],
       ),
@@ -36,35 +44,41 @@ class _HomeScreenState extends State<HomeScreen> {
               decoration: BoxDecoration(color: Colors.deepOrange),
             ),
             ListTile(
-              leading: const Icon(Icons.dashboard),
+              leading: const Icon(Icons.dashboard, color: Colors.deepOrange),
               title: const Text('لوحة التحكم'),
-              onTap: () => setState(() => _selectedIndex = 0),
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
-              leading: const Icon(Icons.inventory_2),
-              title: const Text('المخزون والأصناف'),
-              onTap: () => setState(() => _selectedIndex = 1),
+              leading: const Icon(Icons.add_box, color: Colors.deepOrange),
+              title: const Text('إضافة صنف جديد'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const AddProductScreen()),
+                );
+              },
             ),
             ListTile(
-              leading: const Icon(Icons.point_of_sale),
-              title: const Text('الفواتير والمبيعات'),
-              onTap: () => setState(() => _selectedIndex = 2),
+              leading: const Icon(Icons.point_of_sale, color: Colors.deepOrange),
+              title: const Text('الفواتير والمبيعات (POS)'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const PosScreen()),
+                );
+              },
             ),
             ListTile(
-              leading: const Icon(Icons.people),
+              leading: const Icon(Icons.people, color: Colors.deepOrange),
               title: const Text('العملاء والموردون'),
-              onTap: () => setState(() => _selectedIndex = 3),
+              onTap: () => Navigator.pop(context),
             ),
             ListTile(
-              leading: const Icon(Icons.bar_chart),
+              leading: const Icon(Icons.bar_chart, color: Colors.deepOrange),
               title: const Text('التقارير المالية'),
-              onTap: () => setState(() => _selectedIndex = 4),
-            ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text('الإعدادات'),
-              onTap: () {},
+              onTap: () => Navigator.pop(context),
             ),
           ],
         ),
@@ -84,26 +98,38 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                children: const [
+                children: [
                   _SummaryCard(
-                    title: 'المبيعات اليومية',
-                    value: '0.00',
-                    icon: Icons.monetization_on,
+                    title: 'فاتورة جديدة',
+                    value: 'POS',
+                    icon: Icons.point_of_sale,
                     color: Colors.green,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const PosScreen()),
+                      );
+                    },
                   ),
                   _SummaryCard(
-                    title: 'المشتريات',
-                    value: '0.00',
-                    icon: Icons.shopping_cart,
+                    title: 'إضافة صنف',
+                    value: 'المخزون',
+                    icon: Icons.add_shopping_cart,
                     color: Colors.blue,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AddProductScreen()),
+                      );
+                    },
                   ),
-                  _SummaryCard(
+                  const _SummaryCard(
                     title: 'الديون المستحقة',
-                    value: '0.00',
+                    value: '0.00 ر.ي',
                     icon: Icons.account_balance_wallet,
                     color: Colors.red,
                   ),
-                  _SummaryCard(
+                  const _SummaryCard(
                     title: 'تنبيهات المخزون',
                     value: '0 أصناف',
                     icon: Icons.warning_amber_rounded,
@@ -115,6 +141,17 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddProductScreen()),
+          );
+        },
+        backgroundColor: Colors.deepOrange,
+        icon: const Icon(Icons.add, color: Colors.white),
+        label: const Text('إضافة صنف', style: TextStyle(color: Colors.white)),
+      ),
     );
   }
 }
@@ -124,30 +161,36 @@ class _SummaryCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final VoidCallback? onTap;
 
   const _SummaryCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
+    this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
+      elevation: 3,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 36, color: color),
-            const SizedBox(height: 8),
-            Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
-            const SizedBox(height: 4),
-            Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-          ],
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 36, color: color),
+              const SizedBox(height: 8),
+              Text(title, style: const TextStyle(fontSize: 14, color: Colors.grey)),
+              const SizedBox(height: 4),
+              Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ],
+          ),
         ),
       ),
     );
