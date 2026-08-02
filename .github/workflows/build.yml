@@ -23,6 +23,9 @@ jobs:
         with:
           channel: 'stable'
 
+      - name: Reconstruct Android Files
+        run: flutter create . --platforms=android
+
       - name: Get Dependencies
         run: flutter pub get
 
@@ -34,3 +37,4 @@ jobs:
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
+          
