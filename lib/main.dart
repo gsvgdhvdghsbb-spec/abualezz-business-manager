@@ -36,15 +36,21 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _selectedIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const CustomersScreen(),
-    const InvoicesScreen(),
-    const MoreMenuScreen(),
-  ];
+  void _onTabTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      const DashboardScreen(),
+      const CustomersScreen(),
+      const InvoicesScreen(),
+      MoreMenuScreen(onNavigate: _onTabTapped),
+    ];
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -68,7 +74,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ],
           ),
         ),
-        body: _screens[_selectedIndex],
+        body: screens[_selectedIndex],
         floatingActionButton: FloatingActionButton(
           backgroundColor: const Color(0xFF3A86FF),
           onPressed: () => _showAddInvoiceDialog(context),
@@ -100,7 +106,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
     return InkWell(
-      onTap: () => setState(() => _selectedIndex = index),
+      onTap: () => _onTabTapped(index),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -258,7 +264,7 @@ class CustomersScreen extends StatelessWidget {
   }
 }
 
-// 3. شاشة الفواتير وإمكانيات الطباعة والـ QR
+// 3. شاشة الفواتير
 class InvoicesScreen extends StatelessWidget {
   const InvoicesScreen({super.key});
 
@@ -287,9 +293,9 @@ class InvoicesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final invoices = [
-      {'id': '#INV-000125', 'name': 'عميل نقدي', 'amount': '1,250.00 ريال', 'status': 'مدفوعة', 'color': Colors.green},
-      {'id': '#INV-000124', 'name': 'أحمد محمد', 'amount': '2,450.00 ريال', 'status': 'جزئية', 'color': Colors.orange},
-      {'id': '#INV-000123', 'name': 'مورد رئيسي', 'amount': '3,200.00 ريال', 'status': 'غير مدفوعة', 'color': Colors.red},
+      {'id': '#INV-000125', 'name': 'عميل نقدي', 'amount': '1,250.00 ريال', 'status': 'مدفوعة'},
+      {'id': '#INV-000124', 'name': 'أحمد محمد', 'amount': '2,450.00 ريال', 'status': 'جزئية'},
+      {'id': '#INV-000123', 'name': 'مورد رئيسي', 'amount': '3,200.00 ريال', 'status': 'غير مدفوعة'},
     ];
 
     return ListView.builder(
@@ -320,21 +326,22 @@ class InvoicesScreen extends StatelessWidget {
   }
 }
 
-// 4. الموديولات والإعدادات
+// 4. شبكة الموديولات والربط بالشاشات المخصصة
 class MoreMenuScreen extends StatelessWidget {
-  const MoreMenuScreen({super.key});
+  final Function(int) onNavigate;
+  const MoreMenuScreen({super.key, required this.onNavigate});
 
   @override
   Widget build(BuildContext context) {
     final modules = [
-      {'title': 'إدارة العملاء', 'icon': Icons.groups},
-      {'title': 'إدارة الأصناف', 'icon': Icons.inventory_2},
-      {'title': 'الفواتير', 'icon': Icons.receipt_long},
-      {'title': 'الصندوق النقدي', 'icon': Icons.account_balance},
-      {'title': 'الديون والتحصيل', 'icon': Icons.money_off},
-      {'title': 'التقارير الأرباح', 'icon': Icons.analytics},
-      {'title': 'نسخ احتياطي', 'icon': Icons.cloud_upload},
-      {'title': 'الإعدادات', 'icon': Icons.settings},
+      {'title': 'إدارة العملاء', 'icon': Icons.groups, 'screen': null, 'tab': 1},
+      {'title': 'إدارة الأصناف', 'icon': Icons.inventory_2, 'screen': const ProductsScreen(), 'tab': -1},
+      {'title': 'الفواتير', 'icon': Icons.receipt_long, 'screen': null, 'tab': 2},
+      {'title': 'الصندوق النقدي', 'icon': Icons.account_balance, 'screen': const CashBoxScreen(), 'tab': -1},
+      {'title': 'الديون والتحصيل', 'icon': Icons.money_off, 'screen': const DebtsScreen(), 'tab': -1},
+      {'title': 'تقارير الأرباح', 'icon': Icons.analytics, 'screen': const ReportsScreen(), 'tab': -1},
+      {'title': 'نسخ احتياطي', 'icon': Icons.cloud_upload, 'screen': const BackupScreen(), 'tab': -1},
+      {'title': 'الإعدادات', 'icon': Icons.settings, 'screen': const SettingsScreen(), 'tab': -1},
     ];
 
     return GridView.builder(
@@ -347,22 +354,195 @@ class MoreMenuScreen extends StatelessWidget {
       itemCount: modules.length,
       itemBuilder: (context, index) {
         final item = modules[index];
-        return Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF1B263B),
+        final screen = item['screen'] as Widget?;
+        final tab = item['tab'] as int;
+
+        return Material(
+          color: const Color(0xFF1B263B),
+          borderRadius: BorderRadius.circular(12),
+          child: InkWell(
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white12),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(item['icon'] as IconData, color: const Color(0xFF3A86FF), size: 30),
-              const SizedBox(height: 8),
-              Text(item['title'] as String, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
-            ],
+            onTap: () {
+              if (tab != -1) {
+                onNavigate(tab);
+              } else if (screen != null) {
+                Navigator.push(context, MaterialPageRoute(builder: (context) => screen));
+              }
+            },
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(item['icon'] as IconData, color: const Color(0xFF3A86FF), size: 30),
+                  const SizedBox(height: 8),
+                  Text(item['title'] as String, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
+                ],
+              ),
+            ),
           ),
         );
       },
+    );
+  }
+}
+
+// --- شاشات الموديولات المستقلة ---
+
+// شاشة إدارة الأصناف والمخزون
+class ProductsScreen extends StatelessWidget {
+  const ProductsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final products = [
+      {'name': 'فلتر زيت', 'price': '270.00 ريال', 'qty': '12 حبة'},
+      {'name': 'بواجي', 'price': '100.00 ريال', 'qty': '24 حبة'},
+      {'name': 'زيت محرك', 'price': '80.00 ريال', 'qty': '15 حبة'},
+      {'name': 'فلتر هواء', 'price': '40.00 ريال', 'qty': '8 حبة'},
+    ];
+
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('إدارة الأصناف والمخزون'), backgroundColor: const Color(0xFF0D1B2A)),
+        body: ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: products.length,
+          itemBuilder: (context, index) {
+            final p = products[index];
+            return Card(
+              color: const Color(0xFF1B263B),
+              child: ListTile(
+                leading: const Icon(Icons.inventory, color: Color(0xFF3A86FF)),
+                title: Text(p['name']!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: Text('الكمية: ${p['qty']}', style: const TextStyle(color: Colors.grey)),
+                trailing: Text(p['price']!, style: const TextStyle(color: Colors.greenAccent, fontWeight: FontWeight.bold)),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+// شاشة الصندوق النقدي
+class CashBoxScreen extends StatelessWidget {
+  const CashBoxScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('حركة الصندوق النقدي'), backgroundColor: const Color(0xFF0D1B2A)),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              _buildRow('رصيد بداية اليوم', '10,540.00 ريال', Colors.white),
+              const SizedBox(height: 10),
+              _buildRow('إجمالي الوارد', '5,750.00 ريال', Colors.green),
+              const SizedBox(height: 10),
+              _buildRow('إجمالي الصادر', '3,250.00 ريال', Colors.red),
+              const Divider(color: Colors.grey, height: 30),
+              _buildRow('الرصيد الحالي', '13,040.00 ريال', const Color(0xFF3A86FF)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRow(String title, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: const Color(0xFF1B263B), borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: const TextStyle(color: Colors.white, fontSize: 16)),
+          Text(value, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+}
+
+// شاشة الديون والتحصيل
+class DebtsScreen extends StatelessWidget {
+  const DebtsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('الديون والتحصيل'), backgroundColor: const Color(0xFF0D1B2A)),
+        body: const Center(child: Text('جدول الديون وأقساط العملاء والموردين', style: TextStyle(color: Colors.white))),
+      ),
+    );
+  }
+}
+
+// شاشة التقارير
+class ReportsScreen extends StatelessWidget {
+  const ReportsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('تقارير الأرباح والمصروفات'), backgroundColor: const Color(0xFF0D1B2A)),
+        body: const Center(child: Text('تقارير المبيعات والأرباح والمصروفات', style: TextStyle(color: Colors.white))),
+      ),
+    );
+  }
+}
+
+// شاشة النسخ الاحتياطي
+class BackupScreen extends StatelessWidget {
+  const BackupScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('النسخ الاحتياطي السحابي'), backgroundColor: const Color(0xFF0D1B2A)),
+        body: Center(
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF3A86FF), padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
+            icon: const Icon(Icons.cloud_upload, color: Colors.white),
+            label: const Text('إنشاء نسخة احتياطية الآن', style: TextStyle(color: Colors.white)),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم إنشاء النسخة الاحتياطية بنجاح')));
+            },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// شاشة الإعدادات
+class SettingsScreen extends StatelessWidget {
+  const SettingsScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(title: const Text('الإعدادات'), backgroundColor: const Color(0xFF0D1B2A)),
+        body: const Center(child: Text('إعدادات التطبيق والحساب والعملة', style: TextStyle(color: Colors.white))),
+      ),
     );
   }
 }
