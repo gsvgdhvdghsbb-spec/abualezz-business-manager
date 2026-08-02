@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'add_product_screen.dart';
 import 'pos_screen.dart';
+import 'customers_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -73,12 +74,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.people, color: Colors.deepOrange),
               title: const Text('العملاء والموردون'),
-              onTap: () => Navigator.pop(context),
-            ),
-            ListTile(
-              leading: const Icon(Icons.bar_chart, color: Colors.deepOrange),
-              title: const Text('التقارير المالية'),
-              onTap: () => Navigator.pop(context),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const CustomersScreen()),
+                );
+              },
             ),
           ],
         ),
@@ -123,11 +125,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                   ),
-                  const _SummaryCard(
-                    title: 'الديون المستحقة',
-                    value: '0.00 ر.ي',
-                    icon: Icons.account_balance_wallet,
-                    color: Colors.red,
+                  _SummaryCard(
+                    title: 'العملاء والديون',
+                    value: 'الدليل الحسابي',
+                    icon: Icons.people,
+                    color: Colors.purple,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const CustomersScreen()),
+                      );
+                    },
                   ),
                   const _SummaryCard(
                     title: 'تنبيهات المخزون',
